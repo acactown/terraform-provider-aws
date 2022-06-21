@@ -282,6 +282,23 @@ func Provider() *schema.Provider {
 					},
 				},
 			},
+			"transient_tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration block with settings to set the resource transient tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"keys": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Resource tag keys to set as transient across all resources.",
+						},
+					},
+				},
+			},
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -2088,6 +2105,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
 		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
+		TransientTagsConfig:            expandProviderTransientTags(d.Get("transient_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     d.Get("max_retries").(int),
 		Profile:                        d.Get("profile").(string),
@@ -2461,6 +2479,21 @@ func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
 	}
 
 	return ignoreConfig
+}
+
+func expandProviderTransientTags(l []interface{}) *tftags.TransientConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	transientConfig := &tftags.TransientConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["keys"].(*schema.Set); ok {
+		transientConfig.Keys = tftags.New(v.List())
+	}
+
+	return transientConfig
 }
 
 func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {

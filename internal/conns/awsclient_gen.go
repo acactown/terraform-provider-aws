@@ -313,6 +313,7 @@ type AWSClient struct {
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
+	TransientTagsConfig       *tftags.TransientConfig
 	MediaConvertAccountConn   *mediaconvert.MediaConvert
 	Partition                 string
 	Region                    string

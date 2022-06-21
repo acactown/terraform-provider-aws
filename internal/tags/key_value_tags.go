@@ -30,6 +30,10 @@ type IgnoreConfig struct {
 	KeyPrefixes KeyValueTags
 }
 
+type TransientConfig struct {
+	Keys KeyValueTags
+}
+
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
 // The AWS Go SDK is split into multiple service packages, each service with
 // its own Go struct type representing a resource tag. To standardize logic

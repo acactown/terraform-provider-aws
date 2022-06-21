@@ -23,11 +23,37 @@ import (
 func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	transientTagsConfig := meta.(*conns.AWSClient).TransientTagsConfig
 
 	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
 
-	if defaultTagsConfig.TagsEqual(resourceTags) {
-		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
+	if transientTagsConfig != nil && len(transientTagsConfig.Keys) > 0 && diff.HasChange("tags") {
+		old, _ := diff.GetChange("tags")
+		if old != nil {
+			hasRealChanges := false
+			for _, key := range diff.GetChangedKeysPrefix("") {
+				if !strings.HasPrefix(key, "tags.") {
+					hasRealChanges = true
+					break
+				}
+			}
+
+			if !hasRealChanges {
+				oldResourceTags := old.(map[string]interface{})
+				transientResourceTags := make(tftags.KeyValueTags, len(transientTagsConfig.Keys))
+				for key := range transientTagsConfig.Keys {
+					if _, ok := oldResourceTags[key]; ok {
+						str := oldResourceTags[key].(string) // Prevent referencing issues
+						transientResourceTags[key] = &tftags.TagData{Value: &str}
+					}
+				}
+
+				resourceTags = resourceTags.Merge(transientResourceTags)
+				if err := diff.SetNew("tags", resourceTags.Map()); err != nil {
+					return fmt.Errorf("error setting new tags diff: %w", err)
+				}
+			}
+		}
 	}
 
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)

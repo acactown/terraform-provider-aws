@@ -58,6 +58,7 @@ type Config struct {
 	ForbiddenAccountIds            []string
 	HTTPProxy                      string
 	IgnoreTagsConfig               *tftags.IgnoreConfig
+	TransientTagsConfig            *tftags.TransientConfig
 	Insecure                       bool
 	MaxRetries                     int
 	Profile                        string
@@ -184,6 +185,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
+	client.TransientTagsConfig = c.TransientTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)

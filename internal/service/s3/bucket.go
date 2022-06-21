@@ -690,7 +690,7 @@ func ResourceBucket() *schema.Resource {
 				},
 			},
 
-			"tags":     tftags.TagsSchema(),
+			"tags":     tftags.TagsSchemaComputed(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
